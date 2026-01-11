@@ -53,55 +53,144 @@ npm start
 
 The application will start on `http://localhost:3000`
 
-## API Endpoints
+## API Reference
 
-### REST API Explorer
+### 1. Create User
 
-Visit `http://localhost:3000/explorer` to see all available endpoints.
+**Endpoint**: `POST /users`
 
-### User CRUD Operations
+**Request Body**:
 
-#### Create User
+- `name` (string, required): Full name of the user.
+- `email` (string, required): Email address.
+- `age` (number, optional): User's age.
 
-```bash
-POST /users
-Content-Type: application/json
+**Example**:
 
+```json
 {
-  "name": "John Doe",
-  "email": "john@example.com",
-  "age": 30
+  "name": "Tony Stark",
+  "email": "tony@stark.com",
+  "age": 45
 }
 ```
 
-#### Get All Users
+**Response**: (200 OK)
 
-```bash
-GET /users
-```
-
-#### Get User by ID
-
-```bash
-GET /users/{id}
-```
-
-#### Update User
-
-```bash
-PATCH /users/{id}
-Content-Type: application/json
-
+```json
 {
-  "name": "Jane Doe",
-  "age": 31
+  "id": "d64ca376-dbe8-44d6-8536-b724bc5a40a2",
+  "name": "Tony Stark",
+  "email": "tony@stark.com",
+  "age": 45,
+  "createdAt": "2026-01-11T08:32:55.097Z"
 }
 ```
 
-#### Delete User
+### 2. Get Users (Pagination)
 
-```bash
-DELETE /users/{id}
+**Endpoint**: `GET /users`
+
+**Query Parameters**:
+
+- `limit` (number, optional): Number of results to return (fetch size).
+- `pageState` (string, optional): Base64 encoded state string to fetch the next page.
+
+**Response**: (200 OK)
+
+```json
+{
+  "users": [
+    {
+      "id": "...",
+      "name": "Tony Stark",
+      "email": "tony@stark.com"
+      ...
+    }
+  ],
+  "nextPageState": "..."
+}
+```
+
+_(Note: Pass `nextPageState` to the next request's `pageState` param to fetch the next set of results.)_
+
+### 3. Get User by ID
+
+**Endpoint**: `GET /users/{id}`
+
+**Path Parameters**:
+
+- `id` (string, required): The UUID of the user.
+
+**Response**: (200 OK)
+
+```json
+{
+  "id": "...",
+  "name": "Tony Stark",
+  "email": "..."
+  ...
+}
+```
+
+### 4. Update User
+
+**Endpoint**: `PATCH /users/{id}`
+
+**Path Parameters**:
+
+- `id` (string, required): The UUID of the user.
+
+**Request Body**:
+
+- `name` (string, optional)
+- `email` (string, optional)
+- `age` (number, optional)
+
+**Response**: (204 No Content)
+
+### 5. Delete User
+
+**Endpoint**: `DELETE /users/{id}`
+
+**Path Parameters**:
+
+- `id` (string, required): The UUID of the user.
+
+**Response**: (204 No Content)
+
+## Verification Test Output
+
+The following output confirms the functionality of the Service Layer calling the Cassandra Repository.
+Ran via `npx ts-node src/scripts/verify_service.ts`:
+
+```text
+🚀 Starting Service Layer Verification...
+Initializing DataSource...
+✅ Connected to Cassandra successfully!
+   Keyspace: test_keyspace
+   DataCenter: datacenter1
+Initializing Repository and Service...
+Creating a test user via Service...
+  Created User: ServiceUser_1768120375097 (ID: d64ca376-dbe8-44d6-8536-b724bc5a40a2)
+Fetching User d64ca376-dbe8-44d6-8536-b724bc5a40a2 via Service...
+  Fetched: ServiceUser_1768120375097
+Updating User via Service...
+  Updated Age: 31
+Testing Pagination via Service (Limit: 5)...
+  Page 1 returned 5 users.
+  Page 1 Users: [
+  'Tony Stark',
+  'ServiceUser_1768120375097',
+  'Hulk',
+  'Legolas',
+  'Marty McFly'
+]
+Deleting User via Service...
+  ✅ User correctly not found after delete.
+
+✅ Service Layer Verification Successful!
+Cassandra connection closed
 ```
 
 ## Configuration
