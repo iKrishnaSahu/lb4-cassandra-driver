@@ -45,6 +45,16 @@ async function main() {
     console.log(`  Page 1 returned ${page1.users.length} users.`);
     console.log('  Page 1 Users:', page1.users.map(u => u.name));
 
+    if (page1.nextPageState) {
+      console.log('  Fetching Page 2...');
+      const page2 = await service.getUsers(5, page1.nextPageState);
+      console.log(`  Page 2 returned ${page2.users.length} users.`);
+      console.log('  Page 2 Users:', page2.users.map(u => u.name));
+      console.log('  ✅ Pagination state passed correctly.');
+    } else {
+      console.log('  ℹ️ No second page available (created fewer than 5 users total?).');
+    }
+
     // 7. Delete User via Service
     console.log('Deleting User via Service...');
     await service.deleteUserById(newUser.id);

@@ -36,7 +36,7 @@ export class UserRepository {
   async findAll(limit?: number, pageState?: string): Promise<{users: User[], nextPageState?: string}> {
     // Use Cassandra's native pagination with fetchSize and pageState in options
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const options: any = {};
+    const options: mapping.MappingExecutionOptions = {};
 
     if (limit) {
       options.fetchSize = limit;
@@ -44,7 +44,8 @@ export class UserRepository {
 
     if (pageState) {
       // pageState goes in options, not as separate parameter
-      options.pageState = Buffer.from(pageState, 'base64');
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      options.pageState = Buffer.from(pageState, 'base64') as any;
     }
 
     // findAll signature: findAll(docInfo, executionOptions)
