@@ -1,75 +1,154 @@
-# lb4
+# LoopBack 4 + Cassandra Integration
 
-This application is generated using [LoopBack 4 CLI](https://loopback.io/doc/en/lb4/Command-line-interface.html) with the
-[initial project layout](https://loopback.io/doc/en/lb4/Loopback-application-layout.html).
+A LoopBack 4 application integrated with Apache Cassandra using cassandra-driver.
 
-## Install dependencies
+## Prerequisites
 
-By default, dependencies were installed when this application was generated.
-Whenever dependencies in `package.json` are changed, run the following command:
+- Node.js 20+
+- Apache Cassandra running locally on port 9042
+- npm or yarn
 
-```sh
+## Setup
+
+### 1. Install Dependencies
+
+```bash
 npm install
 ```
 
-To only install resolved dependencies in `package-lock.json`:
+### 2. Setup Cassandra Database
 
-```sh
-npm ci
+Make sure Cassandra is running, then execute the schema script:
+
+```bash
+cqlsh -f schema.cql
 ```
 
-## Run the application
+Or manually create the keyspace and table:
 
-```sh
+```cql
+CREATE KEYSPACE IF NOT EXISTS test_keyspace
+WITH replication = {
+  'class': 'SimpleStrategy',
+  'replication_factor': 1
+};
+
+USE test_keyspace;
+
+CREATE TABLE IF NOT EXISTS users (
+  id UUID PRIMARY KEY,
+  name TEXT,
+  email TEXT,
+  age INT,
+  created_at TIMESTAMP
+);
+```
+
+### 3. Build and Start
+
+```bash
+npm run build
 npm start
 ```
 
-You can also run `node .` to skip the build step.
+The application will start on `http://localhost:3000`
 
-Open http://127.0.0.1:3000 in your browser.
+## API Endpoints
 
-## Rebuild the project
+### REST API Explorer
 
-To incrementally build the project:
+Visit `http://localhost:3000/explorer` to see all available endpoints.
 
-```sh
-npm run build
+### User CRUD Operations
+
+#### Create User
+
+```bash
+POST /users
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "email": "john@example.com",
+  "age": 30
+}
 ```
 
-To force a full build by cleaning up cached artifacts:
+#### Get All Users
 
-```sh
-npm run rebuild
+```bash
+GET /users
 ```
 
-## Fix code style and formatting issues
+#### Get User by ID
 
-```sh
-npm run lint
+```bash
+GET /users/{id}
 ```
 
-To automatically fix such issues:
+#### Update User
 
-```sh
+```bash
+PATCH /users/{id}
+Content-Type: application/json
+
+{
+  "name": "Jane Doe",
+  "age": 31
+}
+```
+
+#### Delete User
+
+```bash
+DELETE /users/{id}
+```
+
+## Configuration
+
+Cassandra connection settings are in `src/datasources/cassandra.datasource.ts`:
+
+```typescript
+const config = {
+  contactPoints: ['127.0.0.1'],
+  localDataCenter: 'datacenter1',
+  keyspace: 'test_keyspace',
+};
+```
+
+## Development
+
+```bash
+# Watch mode
+npm run build:watch
+
+# Run tests
+npm test
+
+# Lint and fix
 npm run lint:fix
 ```
 
-## Other useful commands
+## Project Structure
 
-- `npm run migrate`: Migrate database schemas for models
-- `npm run openapi-spec`: Generate OpenAPI spec into a file
-- `npm run docker:build`: Build a Docker image for this application
-- `npm run docker:run`: Run this application inside a Docker container
-
-## Tests
-
-```sh
-npm test
+```
+src/
+├── controllers/       # REST API endpoints
+│   └── user.controller.ts
+├── datasources/      # Database connections
+│   └── cassandra.datasource.ts
+├── models/          # Data models
+│   └── user.model.ts
+├── repositories/    # Data access layer
+│   └── user.repository.ts
+└── application.ts   # Main application
 ```
 
-## What's next
+## Features
 
-Please check out [LoopBack 4 documentation](https://loopback.io/doc/en/lb4/) to
-understand how you can continue to add features to this application.
-
-[![LoopBack](https://github.com/loopbackio/loopback-next/raw/master/docs/site/imgs/branding/Powered-by-LoopBack-Badge-(blue)-@2x.png)](http://loopback.io/)
+✅ Cassandra integration with cassandra-driver
+✅ Full CRUD operations
+✅ RESTful API with OpenAPI documentation
+✅ TypeScript support
+✅ Auto-generated API explorer
+✅ Lifecycle management (connection/disconnection)
