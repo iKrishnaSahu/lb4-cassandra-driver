@@ -36,14 +36,14 @@ async function main() {
     console.log('\nTesting Pagination (Limit: 2)...');
 
     // Page 1
-    const page1 = await repo.findAll(2);
+    const page1 = await repo.findAll({limit: 2});
     console.log(`  Page 1 returned ${page1.users.length} users.`);
     if (page1.users.length !== 2) throw new Error('Page 1 should have 2 users');
     if (!page1.nextPageState) throw new Error('Page 1 should have a nextPageState');
     console.log('  Page 1 Users:', page1.users.map(u => u.name));
 
     // Page 2
-    const page2 = await repo.findAll(2, page1.nextPageState);
+    const page2 = await repo.findAll({limit: 2}, page1.nextPageState);
     console.log(`  Page 2 returned ${page2.users.length} users.`);
     // Note: We might get fewer than 2 if we reached the end of ALL users in the DB,
     // but since we just added 5, we expect at least 2 users (unless there were 0 before).
@@ -60,7 +60,7 @@ async function main() {
 
     // Page 3
     if (page2.nextPageState) {
-      const page3 = await repo.findAll(2, page2.nextPageState);
+      const page3 = await repo.findAll({limit: 2}, page2.nextPageState);
       console.log(`  Page 3 returned ${page3.users.length} users.`);
       console.log('  Page 3 Users:', page3.users.map(u => u.name));
     }

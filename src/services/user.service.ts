@@ -1,5 +1,5 @@
 import {bind, /* inject, */ BindingScope} from '@loopback/core';
-import {DataObject, repository} from '@loopback/repository';
+import {DataObject, Filter, repository} from '@loopback/repository';
 import {User} from '../models';
 import {UserRepository} from '../repositories';
 
@@ -15,10 +15,10 @@ export class UserService {
   }
 
   async getUsers(
-    limit?: number,
+    filter?: Filter<User>,
     pageState?: string,
   ): Promise<{users: User[]; nextPageState?: string}> {
-    return this.userRepository.findAll(limit, pageState);
+    return this.userRepository.findAll(filter, pageState);
   }
 
   async getUserById(id: string): Promise<User> {

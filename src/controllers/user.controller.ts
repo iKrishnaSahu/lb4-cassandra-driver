@@ -2,6 +2,7 @@ import {service} from '@loopback/core';
 import {
   Count,
   CountSchema,
+  Filter,
 } from '@loopback/repository';
 import {
   del,
@@ -65,10 +66,10 @@ export class UserController {
     },
   })
   async find(
-    @param.query.number('limit') limit?: number,
+    @param.filter(User) filter?: Filter<User>,
     @param.query.string('pageState') pageState?: string,
   ): Promise<{users: User[]; nextPageState?: string}> {
-    return this.userService.getUsers(limit, pageState);
+    return this.userService.getUsers(filter, pageState);
   }
 
   @get('/users/count')

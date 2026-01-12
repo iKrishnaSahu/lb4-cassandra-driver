@@ -87,12 +87,25 @@ The application will start on `http://localhost:3000`
 }
 ```
 
+**Example Request**:
+
+```bash
+curl -X POST http://localhost:3000/users \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "name": "Tony Stark",
+    "email": "tony@stark.com",
+    "age": 45
+  }'
+```
+
 ### 2. Get Users (Pagination)
 
 **Endpoint**: `GET /users`
 
 **Query Parameters**:
 
+- `filter` (object, optional): JSON object for filtering (e.g., `{"where":{"name":"Tony Stark"}}`).
 - `limit` (number, optional): Number of results to return (fetch size).
 - `pageState` (string, optional): Base64 encoded state string to fetch the next page.
 
@@ -110,6 +123,20 @@ The application will start on `http://localhost:3000`
   ],
   "nextPageState": "..."
 }
+```
+
+**Example Request**:
+
+```bash
+curl "http://localhost:3000/users?limit=10"
+```
+
+**Example Request (with Filter)**:
+
+```bash
+# Filter by name "Tony Stark"
+# URL encoded filter={"where":{"name":"Tony Stark"}}
+curl -g "http://localhost:3000/users?filter=%7B%22where%22%3A%7B%22name%22%3A%22Tony%20Stark%22%7D%7D"
 ```
 
 _(Note: Pass `nextPageState` to the next request's `pageState` param to fetch the next set of results.)_
@@ -133,7 +160,31 @@ _(Note: Pass `nextPageState` to the next request's `pageState` param to fetch th
 }
 ```
 
-### 4. Update User
+**Example Request**:
+
+```bash
+curl http://localhost:3000/users/d64ca376-dbe8-44d6-8536-b724bc5a40a2
+```
+
+### 4. Count Users
+
+**Endpoint**: `GET /users/count`
+
+**Response**: (200 OK)
+
+```json
+{
+  "count": 42
+}
+```
+
+**Example Request**:
+
+```bash
+curl http://localhost:3000/users/count
+```
+
+### 5. Update User
 
 **Endpoint**: `PATCH /users/{id}`
 
@@ -149,7 +200,15 @@ _(Note: Pass `nextPageState` to the next request's `pageState` param to fetch th
 
 **Response**: (204 No Content)
 
-### 5. Delete User
+**Example Request**:
+
+```bash
+curl -X PATCH http://localhost:3000/users/d64ca376-dbe8-44d6-8536-b724bc5a40a2 \
+  -H 'Content-Type: application/json' \
+  -d '{"age": 46}'
+```
+
+### 6. Delete User
 
 **Endpoint**: `DELETE /users/{id}`
 
@@ -158,6 +217,12 @@ _(Note: Pass `nextPageState` to the next request's `pageState` param to fetch th
 - `id` (string, required): The UUID of the user.
 
 **Response**: (204 No Content)
+
+**Example Request**:
+
+```bash
+curl -X DELETE http://localhost:3000/users/d64ca376-dbe8-44d6-8536-b724bc5a40a2
+```
 
 ## Verification Test Output
 

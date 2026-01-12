@@ -1,8 +1,9 @@
 import {inject} from '@loopback/core';
-import {DataObject, EntityNotFoundError} from '@loopback/repository';
-import {mapping, types} from 'cassandra-driver';
+import {DataObject, EntityNotFoundError, Filter} from '@loopback/repository';
+import {mapping, QueryOptions, types} from 'cassandra-driver';
 import {CassandraDataSource} from '../datasources/cassandra.datasource';
 import {User} from '../models';
+import {CassandraUtils} from '../utils/cassandra.util';
 
 export class UserRepository {
   private userMapper: mapping.ModelMapper<User>;
@@ -33,43 +34,54 @@ export class UserRepository {
   }
 
   // Find all users with Cassandra's native cursor-based pagination
-  async findAll(limit?: number, pageState?: string): Promise<{users: User[], nextPageState?: string}> {
-    // Use Cassandra's native pagination with fetchSize and pageState in options
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const options: mapping.MappingExecutionOptions = {};
+  // Find all users with Cassandra's native cursor-based pagination and filtering
+  async findAll(filter?: Filter<User>, pageState?: string): Promise<{users: User[], nextPageState?: string}> {
+    const client = this.cassandraDataSource.client;
+    if (!client) {
+      throw new Error('Cassandra client is not available');
+    }
 
-    if (limit) {
-      options.fetchSize = limit;
+    let query = 'SELECT * FROM users';
+    const params: unknown[] = [];
+
+    // Build WHERE clause using utility
+    const {query: whereClause, params: whereParams} = CassandraUtils.buildWhereClause(filter);
+
+    if (whereClause) {
+      query += whereClause;
+      params.push(...whereParams);
+    }
+
+    const options: QueryOptions = {
+      prepare: true,
+    };
+
+    if (filter?.limit) {
+      options.fetchSize = filter.limit;
     }
 
     if (pageState) {
-      // pageState goes in options, not as separate parameter
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      options.pageState = Buffer.from(pageState, 'base64') as any;
+      options.pageState = pageState;
     }
 
-    // findAll signature: findAll(docInfo, executionOptions)
-    const result = await this.userMapper.findAll({}, options);
+    const result = await client.execute(query, params, options);
 
-    const users = result.toArray().map((user: User) => new User({
-      id: user.id.toString(),
-      name: user.name,
-      email: user.email,
-      age: user.age,
-      createdAt: user.createdAt,
-    }));
+    const users = result.rows.map(row => {
+      return new User({
+        id: row.id.toString(),
+        name: row.name,
+        email: row.email,
+        age: row.age,
+        createdAt: row.created_at, // Cassandra driver returns lowercase column names
+      });
+    });
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const nextPageStateRaw = (result as any).pageState;
+    const nextPageStateRaw = result.pageState;
     let nextPageState: string | undefined;
 
     if (nextPageStateRaw) {
-      if (Buffer.isBuffer(nextPageStateRaw)) {
-        nextPageState = nextPageStateRaw.toString('base64');
-      } else {
-        // Assume it's a hex string from the driver
-        nextPageState = Buffer.from(nextPageStateRaw, 'hex').toString('base64');
-      }
+      // driver returns pageState as a hex string or Buffer depending on version/config
+      nextPageState = nextPageStateRaw;
     }
 
     return {users, nextPageState};

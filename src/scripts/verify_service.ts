@@ -41,13 +41,13 @@ async function main() {
 
     // 6. Test Pagination via Service
     console.log('Testing Pagination via Service (Limit: 5)...');
-    const page1 = await service.getUsers(5);
+    const page1 = await service.getUsers({limit: 5});
     console.log(`  Page 1 returned ${page1.users.length} users.`);
     console.log('  Page 1 Users:', page1.users.map(u => u.name));
 
     if (page1.nextPageState) {
       console.log('  Fetching Page 2...');
-      const page2 = await service.getUsers(5, page1.nextPageState);
+      const page2 = await service.getUsers({limit: 5}, page1.nextPageState);
       console.log(`  Page 2 returned ${page2.users.length} users.`);
       console.log('  Page 2 Users:', page2.users.map(u => u.name));
       console.log('  ✅ Pagination state passed correctly.');
